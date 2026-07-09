@@ -122,6 +122,24 @@ async function saveHistoryEntry(entry) {
   await writeFile(HISTORY_FILE, JSON.stringify(history.slice(0, MAX_HISTORY), null, 2));
 }
 
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX = 5;
+const rateBuckets = new Map();
+
+// Each request fans out to 5 paid, metered Mesh calls — throttle per IP so a
+// double-click (or a scripted judge test) can't silently burn through balance.
+function rateLimitFactCheck(req, res, next) {
+  const ip = req.ip;
+  const now = Date.now();
+  const recent = (rateBuckets.get(ip) || []).filter((t) => now - t < RATE_LIMIT_WINDOW_MS);
+  if (recent.length >= RATE_LIMIT_MAX) {
+    return res.status(429).json({ error: `Too many fact-checks — max ${RATE_LIMIT_MAX} per minute. Please wait a moment.` });
+  }
+  recent.push(now);
+  rateBuckets.set(ip, recent);
+  next();
+}
+
 const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -130,7 +148,7 @@ app.get('/api/models', (_req, res) => {
   res.json({ models: PANEL_MODELS });
 });
 
-app.post('/api/fact-check', async (req, res) => {
+app.post('/api/fact-check', rateLimitFactCheck, async (req, res) => {
   const claim = (req.body?.claim || '').trim();
   if (!claim) {
     return res.status(400).json({ error: 'claim is required' });
