@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TruthMesh — Multi-Model Fact Checker</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <div class="brand">
+        <span class="brand-mark">TruthMesh</span>
+        <span class="brand-tag">cross-verify any claim across 5 LLMs, live, via <strong>Mesh API</strong></span>
+      </div>
+      <div class="panel-toggle">
+        <button id="toggleActivity" class="ghost-btn">Mesh Activity Log</button>
+      </div>
+    </header>
+
+    <section class="input-card">
+      <textarea id="claimInput" placeholder="Paste a claim, headline, or social media post... (Hindi or English)" maxlength="2000"></textarea>
+      <div class="input-row">
+        <div class="examples" id="examples"></div>
+        <button id="checkBtn" class="primary-btn">Check Claim</button>
+      </div>
+    </section>
+
+    <section id="statusLine" class="status-line hidden"></section>
+
+    <section id="consensusBox" class="consensus-box hidden"></section>
+
+    <section id="resultsGrid" class="results-grid"></section>
+
+    <aside id="activityDrawer" class="activity-drawer hidden">
+      <div class="drawer-head">
+        <h3>Mesh API Activity Log</h3>
+        <button id="closeActivity" class="ghost-btn small">close</button>
+      </div>
+      <p class="drawer-note">Every AI call this app makes goes through <code>api.meshapi.ai/v1/chat/completions</code>. This is a live log of those calls.</p>
+      <div id="activityList" class="activity-list"></div>
+    </aside>
+
+    <section class="history-section">
+      <h3>Recent checks</h3>
+      <div id="historyList" class="history-list"></div>
+    </section>
+
+    <footer class="foot">
+      Built for the Mesh API Hackathon 2026 · every AI call routes through Mesh API · <a href="https://github.com" id="repoLink" target="_blank" rel="noopener">source</a>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
