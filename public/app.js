@@ -154,6 +154,25 @@ examplesEl.querySelectorAll('.example-chip').forEach((el, i) => {
 
 $('#toggleActivity').addEventListener('click', () => activityDrawer.classList.toggle('hidden'));
 $('#closeActivity').addEventListener('click', () => activityDrawer.classList.add('hidden'));
+$('#openActivityInline').addEventListener('click', () => activityDrawer.classList.remove('hidden'));
+
+const THEME_KEY = 'truthmesh-theme';
+const themeToggle = $('#themeToggle');
+function applyTheme(theme) {
+  if (theme) {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem(THEME_KEY, theme);
+  } else {
+    delete document.documentElement.dataset.theme;
+    localStorage.removeItem(THEME_KEY);
+  }
+  themeToggle.textContent = theme === 'dark' ? '●' : theme === 'light' ? '○' : '◐';
+}
+themeToggle.addEventListener('click', () => {
+  const current = document.documentElement.dataset.theme;
+  applyTheme(current === 'dark' ? 'light' : current === 'light' ? null : 'dark');
+});
+applyTheme(localStorage.getItem(THEME_KEY));
 
 loadHistory();
 loadActivity();

@@ -13,9 +13,12 @@ Single-model fact-checks inherit a single model's blind spots. TruthMesh treats 
 - **Multi-model** (primary) — same prompt, 5 providers, live side-by-side comparison
 - **Bharat** (secondary) — claims can be submitted and reasoned about in Hindi
 
-## Every AI call routes through Mesh API
+## Every AI call routes through Mesh API — proof, for judges
 
-All model calls go through a single function, [`meshChatCompletion`](./mesh.mjs), which always hits `https://api.meshapi.ai/v1/chat/completions`. There is no direct call to any provider's SDK or API anywhere in this codebase. Every call is also logged to an in-memory activity log, visible live in the UI via the **"Mesh Activity Log"** drawer (top right) — showing the exact model, endpoint, latency, tokens, and estimated cost for each request.
+- **The only external AI call in this repo**: [`mesh.mjs:64`](./mesh.mjs#L64) — `await fetch(\`${MESH_BASE_URL}/chat/completions\`, ...)` where `MESH_BASE_URL = 'https://api.meshapi.ai/v1'`.
+- **Every code path that needs an AI response calls this one function**, `meshChatCompletion()`, exported from `mesh.mjs` and used exclusively in [`server.mjs`](./server.mjs)'s `runFactCheck()`, which fans it out across the 5-model panel via `Promise.allSettled`.
+- **No provider SDKs.** Check [`package.json`](./package.json) — dependencies are just `express` and `dotenv`. No `openai`, `@anthropic-ai/sdk`, `@google/genai`, or any other provider package is installed or imported anywhere.
+- **Live, visible proof in the running app**: the banner under the header ("Every AI call in this app routes through `api.meshapi.ai`") is on-screen at all times, and the **Mesh Activity Log** drawer streams every single request made — model, endpoint, latency, tokens, and estimated cost — sourced directly from the same `activityLog` array `meshChatCompletion()` writes to on every call.
 
 ## Stack
 
