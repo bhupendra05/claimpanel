@@ -36,9 +36,11 @@ function renderSkeletons() {
 }
 
 const EXAMPLES = [
-  'Drinking hot water with lemon every morning detoxifies the liver.',
-  '5G towers are linked to increased health risks.',
-  'भारत में हर साल 2 करोड़ इंजीनियरिंग ग्रेजुएट बनते हैं।',
+  '⚠️ Forward this: WhatsApp will start charging ₹1 per message from next month — forward to 10 people to keep your account free.',
+  'सरकार 1 तारीख से सभी बैंक खातों से 4% टैक्स काट लेगी, अभी पैसे निकाल लीजिए।',
+  'Drinking hot water with lemon every morning detoxifies the liver and cures diseases.',
+  'गर्म पानी में नींबू पीने से शरीर के सारे विषाक्त पदार्थ बाहर निकल जाते हैं।',
+  '5G towers are linked to increased health risks and were the cause of the pandemic.',
   'The Great Wall of China is visible from space with the naked eye.',
 ];
 
