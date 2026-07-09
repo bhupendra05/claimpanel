@@ -51,7 +51,7 @@ function escapeHtml(str) {
   }[c]));
 }
 
-function renderConsensus(consensus) {
+function renderConsensus(consensus, results = []) {
   if (!consensus) {
     consensusBox.className = 'consensus-box hidden';
     return;
@@ -64,14 +64,33 @@ function renderConsensus(consensus) {
     `;
     return;
   }
+
+  const dots = results.filter((r) => r.ok).map((r) =>
+    `<span class="verdict-dot ${verdictClass(r.verdict)}" title="${escapeHtml(r.label)}: ${escapeHtml(r.verdict)}"></span>`
+  ).join('');
+
+  if (consensus.isTie) {
+    consensusBox.className = 'consensus-box v-tie split';
+    consensusBox.innerHTML = `
+      <div class="consensus-title">⚡ No majority — models split evenly</div>
+      <div class="consensus-dots">${dots}</div>
+      <div class="consensus-sub">${consensus.respondedCount}/${consensus.totalModels} models responded ·
+        tied between: ${consensus.tiedVerdicts.map(escapeHtml).join(' vs ')} ·
+        breakdown: ${Object.entries(consensus.tally).map(([k, v]) => `${escapeHtml(k)} ${v}`).join(', ')}
+      </div>
+    `;
+    return;
+  }
+
   if (!consensus.verdict) {
     consensusBox.className = 'consensus-box hidden';
     return;
   }
-  consensusBox.className = `consensus-box ${verdictClass(consensus.verdict)}`;
+  consensusBox.className = `consensus-box ${verdictClass(consensus.verdict)} ${consensus.disagreement ? 'split' : 'unanimous'}`;
   const pct = Math.round(consensus.agreement * 100);
   consensusBox.innerHTML = `
-    <div class="consensus-title">Consensus: ${escapeHtml(consensus.verdict)}${consensus.disagreement ? ' (models disagree)' : ''}</div>
+    <div class="consensus-title">${consensus.disagreement ? '⚡' : '✓'} Consensus: ${escapeHtml(consensus.verdict)}${consensus.disagreement ? ' — models disagree' : ''}</div>
+    <div class="consensus-dots">${dots}</div>
     <div class="consensus-sub">${consensus.respondedCount}/${consensus.totalModels} models responded ·
       ${pct}% agreement on the majority verdict ·
       breakdown: ${Object.entries(consensus.tally).map(([k, v]) => `${escapeHtml(k)} ${v}`).join(', ') || 'n/a'}
@@ -79,7 +98,7 @@ function renderConsensus(consensus) {
   `;
 }
 
-function renderResults(results) {
+function renderResults(results, consensusVerdict) {
   resultsGrid.innerHTML = results.map((r, i) => {
     const delay = `style="animation-delay:${i * 70}ms"`;
     if (!r.ok) {
@@ -95,8 +114,9 @@ function renderResults(results) {
         </div>`;
     }
     const conf = r.confidence ?? 0;
+    const dissents = consensusVerdict && r.verdict !== consensusVerdict;
     return `
-      <div class="model-card" ${delay}>
+      <div class="model-card ${dissents ? 'dissent' : ''}" ${delay}>
         <div class="model-head">
           <div>
             <div class="model-name">${escapeHtml(r.label)}</div>
@@ -104,6 +124,7 @@ function renderResults(results) {
           </div>
           <span class="badge ${verdictClass(r.verdict)}">${escapeHtml(r.verdict)}</span>
         </div>
+        ${dissents ? '<div class="dissent-chip">diverges from consensus</div>' : ''}
         <div class="model-reasoning">${escapeHtml(r.reasoning || '')}</div>
         ${r.key_points?.length ? `<ul class="model-points">${r.key_points.map((p) => `<li>${escapeHtml(p)}</li>`).join('')}</ul>` : ''}
         <div class="confidence-bar"><div class="confidence-fill" style="width:${conf}%"></div></div>
@@ -122,7 +143,7 @@ async function loadHistory() {
   historyList.innerHTML = history.map((h) => `
     <div class="history-item" data-id="${h.id}">
       <span class="history-claim">${escapeHtml(h.claim)}</span>
-      <span class="badge ${verdictClass(h.consensus?.verdict)}">${escapeHtml(h.consensus?.verdict || '—')}</span>
+      <span class="badge ${verdictClass(h.consensus?.verdict)}">${escapeHtml(h.consensus?.isTie ? 'Tied' : (h.consensus?.verdict || '—'))}</span>
     </div>
   `).join('') || '<div class="status-line">No checks yet.</div>';
 
@@ -131,8 +152,8 @@ async function loadHistory() {
       const h = history.find((x) => x.id === el.dataset.id);
       if (!h) return;
       claimInput.value = h.claim;
-      renderConsensus(h.consensus);
-      renderResults(h.results);
+      renderConsensus(h.consensus, h.results);
+      renderResults(h.results, h.consensus?.verdict);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
   });
@@ -175,8 +196,8 @@ async function checkClaim() {
     if (!res.ok) throw new Error(data.error || 'request failed');
 
     statusLine.textContent = `Done · ${new Date(data.timestamp).toLocaleTimeString()}`;
-    renderConsensus(data.consensus);
-    renderResults(data.results);
+    renderConsensus(data.consensus, data.results);
+    renderResults(data.results, data.consensus?.verdict);
     await Promise.all([loadHistory(), loadActivity()]);
   } catch (err) {
     statusLine.textContent = `Error: ${err.message}`;

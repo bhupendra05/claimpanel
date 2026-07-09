@@ -201,9 +201,19 @@ textarea {
 .consensus-box.v-false { background: color-mix(in srgb, var(--false) 12%, var(--bg-card)); border-color: var(--false); }
 .consensus-box.v-misleading { background: color-mix(in srgb, var(--misleading) 12%, var(--bg-card)); border-color: var(--misleading); }
 .consensus-box.v-unverifiable { background: color-mix(in srgb, var(--unverifiable) 12%, var(--bg-card)); border-color: var(--unverifiable); }
+.consensus-box.v-tie { background: color-mix(in srgb, var(--misleading) 12%, var(--bg-card)); border-color: var(--misleading); }
+
+.consensus-box.split { border-style: dashed; }
+.consensus-box.unanimous { box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 12%, transparent); }
 
 .consensus-title { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
 .consensus-sub { color: var(--text-dim); font-size: 13px; }
+.consensus-dots { display: flex; gap: 5px; margin: 8px 0; }
+.verdict-dot { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+.verdict-dot.v-true { background: var(--true); }
+.verdict-dot.v-false { background: var(--false); }
+.verdict-dot.v-misleading { background: var(--misleading); }
+.verdict-dot.v-unverifiable { background: var(--unverifiable); }
 
 .results-grid {
   display: grid;
@@ -230,6 +240,19 @@ textarea {
 }
 
 .model-card.err { opacity: 0.6; }
+.model-card.dissent { border-color: var(--misleading); }
+.dissent-chip {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--misleading);
+  border: 1px solid var(--misleading);
+  padding: 2px 8px;
+  border-radius: 999px;
+  margin-bottom: 8px;
+}
 
 .model-card.skeleton { animation: fadeInUp 0.3s ease both, pulse 1.3s ease-in-out infinite; }
 .skeleton-line {

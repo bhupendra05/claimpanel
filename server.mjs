@@ -87,22 +87,20 @@ async function runFactCheck(claim) {
   const tally = {};
   for (const r of ok) tally[r.verdict] = (tally[r.verdict] || 0) + 1;
 
-  let majorityVerdict = null;
-  let majorityCount = 0;
-  for (const [verdict, count] of Object.entries(tally)) {
-    if (count > majorityCount) {
-      majorityVerdict = verdict;
-      majorityCount = count;
-    }
-  }
+  const tallyEntries = Object.entries(tally);
+  const majorityCount = tallyEntries.length ? Math.max(...tallyEntries.map(([, c]) => c)) : 0;
+  const topVerdicts = tallyEntries.filter(([, c]) => c === majorityCount).map(([v]) => v);
+  const isTie = topVerdicts.length > 1;
 
   const consensus = {
-    verdict: majorityVerdict,
+    verdict: isTie ? null : topVerdicts[0] ?? null,
+    isTie,
+    tiedVerdicts: isTie ? topVerdicts : [],
     agreement: ok.length ? +(majorityCount / ok.length).toFixed(2) : 0,
     respondedCount: ok.length,
     totalModels: PANEL_MODELS.length,
     tally,
-    disagreement: ok.length > 0 && majorityCount < ok.length,
+    disagreement: ok.length > 0 && (isTie || majorityCount < ok.length),
   };
 
   return { results, consensus };
