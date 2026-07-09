@@ -176,6 +176,39 @@ app.get('/api/activity', (_req, res) => {
   res.json({ activity: getActivityLog().slice(0, 40) });
 });
 
+app.get('/api/leaderboard', async (_req, res) => {
+  const history = await loadHistory();
+  const stats = new Map(PANEL_MODELS.map((m) => [m.id, {
+    model: m.id, label: m.label, provider: m.provider,
+    responses: 0, verdictCounts: {}, totalConfidence: 0, majorityMatches: 0, loneDissents: 0,
+  }]));
+
+  for (const entry of history) {
+    const majority = entry.consensus?.isTie ? null : entry.consensus?.verdict;
+    const respondedOk = entry.results.filter((r) => r.ok);
+    for (const r of respondedOk) {
+      const s = stats.get(r.model);
+      if (!s) continue;
+      s.responses++;
+      s.verdictCounts[r.verdict] = (s.verdictCounts[r.verdict] || 0) + 1;
+      s.totalConfidence += r.confidence || 0;
+      if (majority && r.verdict === majority) s.majorityMatches++;
+      if (majority && r.verdict !== majority) {
+        const others = respondedOk.filter((x) => x.model !== r.model);
+        if (others.length && others.every((x) => x.verdict === majority)) s.loneDissents++;
+      }
+    }
+  }
+
+  const leaderboard = [...stats.values()].map((s) => ({
+    ...s,
+    avgConfidence: s.responses ? +(s.totalConfidence / s.responses).toFixed(1) : null,
+    agreementRate: s.responses ? +(s.majorityMatches / s.responses).toFixed(2) : null,
+  }));
+
+  res.json({ leaderboard, totalChecks: history.length });
+});
+
 const port = process.env.PORT || 8787;
 app.listen(port, () => {
   console.log(`TruthMesh running at http://localhost:${port}`);

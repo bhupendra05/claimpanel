@@ -329,7 +329,27 @@ textarea {
 .activity-item.error .a-top { color: var(--false); }
 .activity-item.pending .a-top { color: var(--misleading); }
 
-.history-section h3 { font-size: 14px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em; }
+.leaderboard-section, .history-section { margin-bottom: 24px; }
+.leaderboard-section h3, .history-section h3 { font-size: 14px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em; }
+.section-note { text-transform: none; letter-spacing: normal; font-weight: 400; }
+
+.lb-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  font-size: 13px;
+}
+.lb-table th, .lb-table td {
+  text-align: left;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.lb-table th { color: var(--text-dim); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; }
+.lb-table tbody tr:last-child td { border-bottom: none; }
+.lb-table .model-provider { margin-top: 2px; }
 .history-list { display: flex; flex-direction: column; gap: 6px; }
 .history-item {
   display: flex;

@@ -6,6 +6,7 @@ const statusLine = $('#statusLine');
 const consensusBox = $('#consensusBox');
 const resultsGrid = $('#resultsGrid');
 const historyList = $('#historyList');
+const leaderboardTable = $('#leaderboardTable');
 const activityDrawer = $('#activityDrawer');
 const activityList = $('#activityList');
 const examplesEl = $('#examples');
@@ -159,6 +160,33 @@ async function loadHistory() {
   });
 }
 
+async function loadLeaderboard() {
+  const res = await fetch('/api/leaderboard');
+  const { leaderboard, totalChecks } = await res.json();
+  if (!totalChecks) {
+    leaderboardTable.innerHTML = '<div class="status-line">Run a few checks to build the leaderboard.</div>';
+    return;
+  }
+  const sorted = [...leaderboard].sort((a, b) => (b.agreementRate ?? -1) - (a.agreementRate ?? -1));
+  leaderboardTable.innerHTML = `
+    <table class="lb-table">
+      <thead>
+        <tr><th>Model</th><th>Checks</th><th>Agrees w/ consensus</th><th>Avg confidence</th><th>Lone dissents</th></tr>
+      </thead>
+      <tbody>
+        ${sorted.map((s) => `
+          <tr>
+            <td>${escapeHtml(s.label)}<div class="model-provider">${escapeHtml(s.provider)}</div></td>
+            <td>${s.responses}</td>
+            <td>${s.agreementRate != null ? Math.round(s.agreementRate * 100) + '%' : '—'}</td>
+            <td>${s.avgConfidence ?? '—'}</td>
+            <td>${s.loneDissents}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
 async function loadActivity() {
   const res = await fetch('/api/activity');
   const { activity } = await res.json();
@@ -198,7 +226,7 @@ async function checkClaim() {
     statusLine.textContent = `Done · ${new Date(data.timestamp).toLocaleTimeString()}`;
     renderConsensus(data.consensus, data.results);
     renderResults(data.results, data.consensus?.verdict);
-    await Promise.all([loadHistory(), loadActivity()]);
+    await Promise.all([loadHistory(), loadActivity(), loadLeaderboard()]);
   } catch (err) {
     statusLine.textContent = `Error: ${err.message}`;
   } finally {
@@ -241,3 +269,4 @@ applyTheme(localStorage.getItem(THEME_KEY));
 loadModelPanel();
 loadHistory();
 loadActivity();
+loadLeaderboard();

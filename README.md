@@ -42,6 +42,7 @@ Open http://localhost:8787
 - `GET /api/history` → last 20 fact-checks
 - `GET /api/activity` → last 40 raw Mesh API calls (for judge visibility)
 - `GET /api/models` → the model panel in use
+- `GET /api/leaderboard` → per-model stats aggregated from history — agreement rate with the group consensus, average confidence, and how often each model was the lone dissenter
 
 ## Model panel
 
