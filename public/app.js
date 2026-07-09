@@ -10,6 +10,30 @@ const activityDrawer = $('#activityDrawer');
 const activityList = $('#activityList');
 const examplesEl = $('#examples');
 
+let MODEL_PANEL = [];
+async function loadModelPanel() {
+  const res = await fetch('/api/models');
+  const { models } = await res.json();
+  MODEL_PANEL = models;
+}
+
+function renderSkeletons() {
+  resultsGrid.innerHTML = MODEL_PANEL.map((m, i) => `
+    <div class="model-card skeleton" style="animation-delay:${i * 70}ms">
+      <div class="model-head">
+        <div>
+          <div class="model-name">${escapeHtml(m.label)}</div>
+          <div class="model-provider">${escapeHtml(m.provider)} · thinking…</div>
+        </div>
+        <span class="badge-skeleton"></span>
+      </div>
+      <div class="skeleton-line"></div>
+      <div class="skeleton-line"></div>
+      <div class="skeleton-line short"></div>
+    </div>
+  `).join('');
+}
+
 const EXAMPLES = [
   'Drinking hot water with lemon every morning detoxifies the liver.',
   '5G towers are linked to increased health risks.',
@@ -56,10 +80,11 @@ function renderConsensus(consensus) {
 }
 
 function renderResults(results) {
-  resultsGrid.innerHTML = results.map((r) => {
+  resultsGrid.innerHTML = results.map((r, i) => {
+    const delay = `style="animation-delay:${i * 70}ms"`;
     if (!r.ok) {
       return `
-        <div class="model-card err">
+        <div class="model-card err" ${delay}>
           <div class="model-head">
             <div>
               <div class="model-name">${escapeHtml(r.label)}</div>
@@ -71,7 +96,7 @@ function renderResults(results) {
     }
     const conf = r.confidence ?? 0;
     return `
-      <div class="model-card">
+      <div class="model-card" ${delay}>
         <div class="model-head">
           <div>
             <div class="model-name">${escapeHtml(r.label)}</div>
@@ -138,7 +163,7 @@ async function checkClaim() {
   statusLine.classList.remove('hidden');
   statusLine.textContent = 'Routing your claim to 5 models via Mesh API…';
   consensusBox.className = 'consensus-box hidden';
-  resultsGrid.innerHTML = '';
+  renderSkeletons();
 
   try {
     const res = await fetch('/api/fact-check', {
@@ -192,5 +217,6 @@ themeToggle.addEventListener('click', () => {
 });
 applyTheme(localStorage.getItem(THEME_KEY));
 
+loadModelPanel();
 loadHistory();
 loadActivity();

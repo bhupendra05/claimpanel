@@ -212,14 +212,39 @@ textarea {
   margin-bottom: 28px;
 }
 
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 0.9; }
+}
+
 .model-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 14px;
+  animation: fadeInUp 0.35s ease both;
 }
 
 .model-card.err { opacity: 0.6; }
+
+.model-card.skeleton { animation: fadeInUp 0.3s ease both, pulse 1.3s ease-in-out infinite; }
+.skeleton-line {
+  height: 10px;
+  background: var(--bg-card-2);
+  border-radius: 4px;
+  margin: 8px 0;
+}
+.skeleton-line.short { width: 55%; }
+.badge-skeleton {
+  width: 64px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--bg-card-2);
+}
 
 .model-head {
   display: flex;
