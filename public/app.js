@@ -21,18 +21,36 @@ function verdictClass(v) {
   return `v-${String(v || 'unverifiable').toLowerCase()}`;
 }
 
+function escapeHtml(str) {
+  return String(str ?? '').replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c]));
+}
+
 function renderConsensus(consensus) {
-  if (!consensus || !consensus.verdict) {
+  if (!consensus) {
+    consensusBox.className = 'consensus-box hidden';
+    return;
+  }
+  if (consensus.respondedCount === 0) {
+    consensusBox.className = 'consensus-box v-false';
+    consensusBox.innerHTML = `
+      <div class="consensus-title">⚠ All ${consensus.totalModels} models failed to respond</div>
+      <div class="consensus-sub">This usually means the Mesh API key has no balance left, or the models are temporarily unreachable. Open the Mesh Activity Log to see the exact error per model.</div>
+    `;
+    return;
+  }
+  if (!consensus.verdict) {
     consensusBox.className = 'consensus-box hidden';
     return;
   }
   consensusBox.className = `consensus-box ${verdictClass(consensus.verdict)}`;
   const pct = Math.round(consensus.agreement * 100);
   consensusBox.innerHTML = `
-    <div class="consensus-title">Consensus: ${consensus.verdict}${consensus.disagreement ? ' (models disagree)' : ''}</div>
+    <div class="consensus-title">Consensus: ${escapeHtml(consensus.verdict)}${consensus.disagreement ? ' (models disagree)' : ''}</div>
     <div class="consensus-sub">${consensus.respondedCount}/${consensus.totalModels} models responded ·
       ${pct}% agreement on the majority verdict ·
-      breakdown: ${Object.entries(consensus.tally).map(([k, v]) => `${k} ${v}`).join(', ') || 'n/a'}
+      breakdown: ${Object.entries(consensus.tally).map(([k, v]) => `${escapeHtml(k)} ${v}`).join(', ') || 'n/a'}
     </div>
   `;
 }
@@ -44,11 +62,11 @@ function renderResults(results) {
         <div class="model-card err">
           <div class="model-head">
             <div>
-              <div class="model-name">${r.label}</div>
-              <div class="model-provider">${r.provider} · ${r.model}</div>
+              <div class="model-name">${escapeHtml(r.label)}</div>
+              <div class="model-provider">${escapeHtml(r.provider)} · ${escapeHtml(r.model)}</div>
             </div>
           </div>
-          <div class="model-reasoning">⚠ ${r.error}</div>
+          <div class="model-reasoning">⚠ ${escapeHtml(r.error)}</div>
         </div>`;
     }
     const conf = r.confidence ?? 0;
@@ -56,13 +74,13 @@ function renderResults(results) {
       <div class="model-card">
         <div class="model-head">
           <div>
-            <div class="model-name">${r.label}</div>
-            <div class="model-provider">${r.provider} · ${r.model}</div>
+            <div class="model-name">${escapeHtml(r.label)}</div>
+            <div class="model-provider">${escapeHtml(r.provider)} · ${escapeHtml(r.model)}</div>
           </div>
-          <span class="badge ${verdictClass(r.verdict)}">${r.verdict}</span>
+          <span class="badge ${verdictClass(r.verdict)}">${escapeHtml(r.verdict)}</span>
         </div>
-        <div class="model-reasoning">${r.reasoning || ''}</div>
-        ${r.key_points?.length ? `<ul class="model-points">${r.key_points.map((p) => `<li>${p}</li>`).join('')}</ul>` : ''}
+        <div class="model-reasoning">${escapeHtml(r.reasoning || '')}</div>
+        ${r.key_points?.length ? `<ul class="model-points">${r.key_points.map((p) => `<li>${escapeHtml(p)}</li>`).join('')}</ul>` : ''}
         <div class="confidence-bar"><div class="confidence-fill" style="width:${conf}%"></div></div>
         <div class="model-meta">
           <span>confidence ${conf}%</span>
@@ -78,8 +96,8 @@ async function loadHistory() {
   const { history } = await res.json();
   historyList.innerHTML = history.map((h) => `
     <div class="history-item" data-id="${h.id}">
-      <span class="history-claim">${h.claim}</span>
-      <span class="badge ${verdictClass(h.consensus?.verdict)}">${h.consensus?.verdict || '—'}</span>
+      <span class="history-claim">${escapeHtml(h.claim)}</span>
+      <span class="badge ${verdictClass(h.consensus?.verdict)}">${escapeHtml(h.consensus?.verdict || '—')}</span>
     </div>
   `).join('') || '<div class="status-line">No checks yet.</div>';
 
@@ -100,13 +118,13 @@ async function loadActivity() {
   const { activity } = await res.json();
   activityList.innerHTML = activity.map((a) => `
     <div class="activity-item ${a.status}">
-      <div class="a-top"><span>${a.model}</span><span>${a.status}</span></div>
+      <div class="a-top"><span>${escapeHtml(a.model)}</span><span>${escapeHtml(a.status)}</span></div>
       <div class="a-meta">
-        POST ${a.endpoint}<br/>
+        POST ${escapeHtml(a.endpoint)}<br/>
         ${a.latencyMs != null ? `${a.latencyMs}ms` : ''}
         ${a.promptTokens != null ? ` · ${a.promptTokens}+${a.completionTokens} tok` : ''}
         ${a.costUsd != null ? ` · $${a.costUsd}` : ''}
-        ${a.error ? ` · ${a.error}` : ''}
+        ${a.error ? ` · ${escapeHtml(a.error)}` : ''}
       </div>
     </div>
   `).join('') || '<div class="status-line">No Mesh API calls yet.</div>';
