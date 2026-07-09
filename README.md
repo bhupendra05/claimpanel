@@ -1,24 +1,16 @@
-# TruthMesh
+# ClaimPanel
 
-A multi-model fact-checker built on [Mesh API](https://meshapi.ai) for the **Mesh API Hackathon 2026**.
-
-Paste a claim, headline, or social post (Hindi or English) and TruthMesh routes it to **5 LLMs from 5 different providers** in parallel — OpenAI, Anthropic, Google, DeepSeek, and xAI — then shows each model's verdict side by side with a consensus score, so you can see where models agree and where (and why) they don't.
+A multi-model fact-checker. Paste a claim, headline, or social post (Hindi or English) and ClaimPanel routes it to **5 LLMs from 5 different providers** in parallel — OpenAI, Anthropic, Google, DeepSeek, and xAI — then shows each model's verdict side by side with a consensus score, so you can see where models agree and where (and why) they don't.
 
 ## Why this exists
 
-Single-model fact-checks inherit a single model's blind spots. TruthMesh treats disagreement between models as signal, not noise: if 4/5 models call a claim false and one disagrees, that's more useful than a single confident-sounding answer.
+Single-model fact-checks inherit a single model's blind spots. ClaimPanel treats disagreement between models as signal, not noise: if 4/5 models call a claim false and one disagrees, that's more useful than a single confident-sounding answer. It's aimed at claims that spread as WhatsApp/social forwards — health myths, financial scams, "forward this or else" hoaxes — where a quick, multi-angle sanity check is more useful than a single AI's confident-sounding guess.
 
-## Track fit
+## How it's built
 
-- **Multi-model** (primary) — same prompt, 5 providers, live side-by-side comparison
-- **Bharat** (secondary) — claims can be submitted and reasoned about in Hindi
+Every model call goes through one function, [`meshChatCompletion()`](./mesh.mjs), which calls [Mesh API](https://meshapi.ai) — a single gateway to 1000+ models across providers, so the app needs one API key instead of five separate provider accounts. `server.mjs`'s `runFactCheck()` fans a claim out to the 5-model panel via `Promise.allSettled`, computes a majority-verdict consensus, and flags ties/disagreement explicitly instead of silently picking a winner.
 
-## Every AI call routes through Mesh API — proof, for judges
-
-- **The only external AI call in this repo**: [`mesh.mjs:64`](./mesh.mjs#L64) — `await fetch(\`${MESH_BASE_URL}/chat/completions\`, ...)` where `MESH_BASE_URL = 'https://api.meshapi.ai/v1'`.
-- **Every code path that needs an AI response calls this one function**, `meshChatCompletion()`, exported from `mesh.mjs` and used exclusively in [`server.mjs`](./server.mjs)'s `runFactCheck()`, which fans it out across the 5-model panel via `Promise.allSettled`.
-- **No provider SDKs.** Check [`package.json`](./package.json) — dependencies are just `express` and `dotenv`. No `openai`, `@anthropic-ai/sdk`, `@google/genai`, or any other provider package is installed or imported anywhere.
-- **Live, visible proof in the running app**: the banner under the header ("Every AI call in this app routes through `api.meshapi.ai`") is on-screen at all times, and the **Mesh Activity Log** drawer streams every single request made — model, endpoint, latency, tokens, and estimated cost — sourced directly from the same `activityLog` array `meshChatCompletion()` writes to on every call.
+A live **Mesh Activity Log** in the UI streams every request made — model, latency, tokens, and estimated cost — for full transparency into what each check actually costs and how long it takes.
 
 ## Stack
 
@@ -40,7 +32,7 @@ Open http://localhost:8787
 
 - `POST /api/fact-check` `{ claim: string }` → runs the claim through the 5-model panel, returns per-model verdicts + consensus
 - `GET /api/history` → last 20 fact-checks
-- `GET /api/activity` → last 40 raw Mesh API calls (for judge visibility)
+- `GET /api/activity` → last 40 raw model API calls
 - `GET /api/models` → the model panel in use
 - `GET /api/leaderboard` → per-model stats aggregated from history — agreement rate with the group consensus, average confidence, and how often each model was the lone dissenter
 
@@ -54,4 +46,4 @@ Open http://localhost:8787
 | `deepseek/deepseek-chat-v3.1` | DeepSeek |
 | `xai/grok-4.1-fast-non-reasoning` | xAI |
 
-Picked for provider diversity + low cost, so a 5-way check stays cheap and fast enough for live demos.
+Picked for provider diversity + low cost, so a 5-way check stays cheap and fast enough for everyday use.

@@ -1,7 +1,7 @@
 {
-  "name": "truthmesh",
+  "name": "claimpanel",
   "version": "1.0.0",
-  "description": "Multi-model fact-checker built on Mesh API — cross-verify claims across 5 LLMs from different providers.",
+  "description": "Multi-model fact-checker — cross-verify claims across 5 LLMs from different providers.",
   "type": "module",
   "main": "server.mjs",
   "scripts": {

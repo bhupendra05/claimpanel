@@ -211,5 +211,5 @@ app.get('/api/leaderboard', async (_req, res) => {
 
 const port = process.env.PORT || 8787;
 app.listen(port, () => {
-  console.log(`TruthMesh running at http://localhost:${port}`);
+  console.log(`ClaimPanel running at http://localhost:${port}`);
 });

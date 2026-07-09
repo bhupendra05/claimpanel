@@ -250,7 +250,7 @@ $('#toggleActivity').addEventListener('click', () => activityDrawer.classList.to
 $('#closeActivity').addEventListener('click', () => activityDrawer.classList.add('hidden'));
 $('#openActivityInline').addEventListener('click', () => activityDrawer.classList.remove('hidden'));
 
-const THEME_KEY = 'truthmesh-theme';
+const THEME_KEY = 'claimpanel-theme';
 const themeToggle = $('#themeToggle');
 function applyTheme(theme) {
   if (theme) {
